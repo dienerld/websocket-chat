@@ -1,4 +1,6 @@
 import type { FastifyRequest, onRequestHookHandler } from 'fastify'
+import { JsonWebTokenError, TokenExpiredError, verify } from 'jsonwebtoken'
+import z from 'zod'
 
 import { env } from '@env'
 
@@ -6,6 +8,7 @@ function verifyVerb(allowedVerb: string | null, requestVerb?: string) {
   if (!allowedVerb || !requestVerb) return true
   return allowedVerb === requestVerb
 }
+
 function isRouteAllowed(_allowedRoute: string, request: FastifyRequest) {
   const currentRoute = request.url
   const requestVerb = request.method.toUpperCase()
@@ -47,31 +50,54 @@ function isRouteAllowed(_allowedRoute: string, request: FastifyRequest) {
   )
 }
 
-/**
- * Middleware to verify the token
- * @param publicPaths - Array of public paths
- * @param requiredVerification - Array of path to force validation
- * @returns onRequestHookHandler
- * @example
- * app.addHook('onRequest', verifyToken(['/public-path']))
- * app.addHook('onRequest', verifyToken(['/public-path', '/another-public-path', '/public/*]))
- */
-
-export const verifyToken: onRequestHookHandler = async (request, reply) => {
-  const authHeader = request.headers['x-api-key']
-  if (!authHeader) {
-    reply.code(403).send({
-      error: 'Forbidden',
-      message: 'No token provided',
-    })
+export const verifyAuth: onRequestHookHandler = async (request, reply) => {
+  const userSession = request.headers['x-user-session'] as string
+  try {
+    const session = verify(userSession, env.SESSION_SECRET) as unknown as {
+      id: string
+    }
+    if (!session) {
+      reply.code(401).send({
+        error: 'Unauthorized',
+        message: 'No session provided',
+      })
+      return
+    }
+    request.session.set('user_id', session.id)
+    request.session.save()
     return
-  }
+  } catch (e) {
+    if (e instanceof JsonWebTokenError) {
+      return reply.code(401).send(
+        schemaResponseUnauthorized.parse({
+          error: 'Unauthorized',
+          message: 'No user id provided',
+          statusCode: 401,
+        })
+      )
+    }
+    if (e instanceof TokenExpiredError) {
+      return reply.code(401).send(
+        schemaResponseUnauthorized.parse({
+          error: 'Unauthorized',
+          message: 'Token expired',
+          statusCode: 401,
+        })
+      )
+    }
 
-  if (authHeader !== env.ACCESS_KEY) {
-    reply.code(403).send({
-      error: 'Forbidden',
-      message: 'Invalid Token',
-    })
-    return
+    return reply.code(401).send(
+      schemaResponseUnauthorized.parse({
+        error: 'Unauthorized',
+        message: 'Invalid token',
+        statusCode: 401,
+      })
+    )
   }
 }
+
+export const schemaResponseUnauthorized = z.object({
+  error: z.string(),
+  message: z.string(),
+  statusCode: z.literal(401),
+})

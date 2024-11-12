@@ -1,6 +1,39 @@
 {
   "editor.defaultFormatter": "biomejs.biome",
   "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  }
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.biome": "explicit",
+      "source.fixAll.biome": "explicit",
+      "source.addMissingImports.ts": "explicit"
+    }
+  },
+  "biome.enabled": true,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "Farm",
+      "group": "Personal",
+      "database": "farm-manager",
+      "username": "docker",
+      "password": "docker"
+    },
+    {
+      "pgOptions": {
+        "ssl": {
+          "rejectUnauthorized": true
+        }
+      },
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "connectString": "postgresql://neondb_owner:KDJZPWjO2t7N@ep-wandering-brook-a5ka2yi3.us-east-2.aws.neon.tech/neondb?sslmode=require",
+      "name": "Farm-Prod",
+      "group": "Personal"
+    }
+  ]
 }
