@@ -4,6 +4,7 @@ import {
   isResponseSerializationError,
 } from 'fastify-type-provider-zod'
 import z from 'zod'
+import { AppError } from './app.error'
 
 export const schemaBadRequest = z.object({
   error: z.string(),
@@ -30,13 +31,20 @@ export const parseZodError = (
 ) => {
   console.error(err)
 
+  if (err instanceof AppError) {
+    return reply.code(err.code as number).send({
+      error: err.name,
+      message: err.message,
+      statusCode: err.code,
+    })
+  }
+
   if (hasZodFastifySchemaValidationErrors(err)) {
     return reply.code(400).send({
       error: 'Response Validation Error',
       message: "Request doesn't match the schema",
       statusCode: 400,
       issues: err.validation.map(issue => ({
-        // @ts-expect-error - mismatch type
         path: issue.params.issue.path[0],
         message: issue.message,
       })),

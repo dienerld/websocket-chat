@@ -1,4 +1,5 @@
-name: farm-manager-backend
+# use .env
+name: ${PROJECT_NAME}
 
 services:
   pg:
@@ -6,19 +7,20 @@ services:
     ports:
       - '5432:5432'
     environment:
-      - POSTGRES_USER=docker
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_DB=farm-manager
-      - TZ=America/Sao_Paulo
-    volumes:
-      - farm-manager-pg-data:/var/lib/postgresql/data
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=UTC
     networks:
-      - observability
+      - internal
 
-volumes:
-  farm-manager-pg-data:
-    driver: local
+  valkey:
+    image: valkey/valkey:alpine3.21
+    ports:
+      - 6379:6379
+    networks:
+      - internal
 
 networks:
-  observability:
-    external: true
+  internal:
+    driver: bridge

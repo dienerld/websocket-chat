@@ -34,6 +34,16 @@
       "connectString": "postgresql://neondb_owner:KDJZPWjO2t7N@ep-wandering-brook-a5ka2yi3.us-east-2.aws.neon.tech/neondb?sslmode=require",
       "name": "Farm-Prod",
       "group": "Personal"
+    },
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "websocket",
+      "database": "websocket",
+      "username": "websocket",
+      "password": "websocket"
     }
   ]
 }

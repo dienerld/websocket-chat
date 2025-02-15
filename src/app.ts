@@ -1,8 +1,7 @@
 import { join } from 'node:path'
+import { version } from '@@/package.json'
 import fastifyAutoload, { type AutoloadPluginOptions } from '@fastify/autoload'
-import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
-import fastifySession from '@fastify/session'
 import fastifySwagger from '@fastify/swagger'
 import fastify, { type FastifyServerOptions } from 'fastify'
 import {
@@ -28,21 +27,18 @@ export const fastifyInstance = fastify()
   .setSerializerCompiler(serializerCompiler)
   .withTypeProvider<ZodTypeProvider>()
   .register(fastifyCors, { origin: env.CORS })
-  .register(fastifyCookie)
-  .register(fastifySession, { secret: env.SESSION_SECRET })
   .register(fastifySwagger, {
     openapi: {
       info: {
-        title: 'Sample API',
-        description: 'Sample backend service with Fastify',
-        version: '1.0.0',
+        title: 'Chat API',
+        description: 'Simple fastify chat API for study websocket',
+        version,
       },
       servers: [],
       tags: [
         { name: 'Root', description: 'Operations about root' },
-        { name: 'Animal', description: 'Operations about animals' },
+        { name: 'Auth', description: 'Operations about auth' },
         { name: 'User', description: 'Operations about users' },
-        { name: 'Production', description: 'Operations about productions' },
       ],
     },
     transform: jsonSchemaTransform,
@@ -54,13 +50,6 @@ export const fastifyInstance = fastify()
 
 fastifyInstance.register(rootRouter, { prefix: '/' })
 
-// This loads all plugins defined in plugins
-// those should be support plugins that are reused
-// through your application
-// void app.register(fastifyAutoload, {
-//   dir: join(__dirname, 'plugins'),
-//   options: opts,
-// })
 void fastifyInstance.register(fastifyAutoload, {
   dir: join(__dirname, 'modules'),
   maxDepth: 1,
