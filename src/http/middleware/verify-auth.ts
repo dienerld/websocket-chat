@@ -51,11 +51,16 @@ function isRouteAllowed(_allowedRoute: string, request: FastifyRequest) {
 }
 
 export const verifyAuth: onRequestHookHandler = async (request, reply) => {
-  const userSession = request.headers['x-user-session'] as string
+  const userSession = request.headers.authorization?.replace(
+    'Bearer ',
+    ''
+  ) as string
+
   try {
-    const session = verify(userSession, env.SESSION_SECRET) as unknown as {
+    const session = verify(userSession, env.JWT_SECRET) as unknown as {
       id: string
     }
+
     if (!session) {
       reply.code(401).send({
         error: 'Unauthorized',
@@ -63,6 +68,7 @@ export const verifyAuth: onRequestHookHandler = async (request, reply) => {
       })
       return
     }
+
     request.session.set('user_id', session.id)
     request.session.save()
     return

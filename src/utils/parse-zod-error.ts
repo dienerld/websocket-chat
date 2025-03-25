@@ -10,12 +10,14 @@ export const schemaBadRequest = z.object({
   error: z.string(),
   message: z.string(),
   statusCode: z.number().default(400),
-  issues: z.array(
-    z.object({
-      path: z.string(),
-      message: z.string(),
-    })
-  ),
+  issues: z
+    .array(
+      z.object({
+        path: z.string(),
+        message: z.string(),
+      })
+    )
+    .optional(),
 })
 
 export const schemaInternalError = z.object({

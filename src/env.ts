@@ -27,6 +27,7 @@ const envSchema = z.object({
     .min(0)
     .max(86400)
     .default(60 * 60 * 24),
+  SESSION_SECRET: z.string().default('secret-with-at-least-32-characters'),
 })
 
 export const env = envSchema.parse(resolveEnvVars(process.env))

@@ -34,14 +34,6 @@ export const friend = pgTable('friends', {
     .defaultNow(),
 })
 
-// // Relacionamento de amigos
-// export const userRelations = relations(user, ({ many }) => ({
-//   friends: many(friend, {
-//     relationName: 'user_friends',
-//   }),
-//   roomMembers: many(roomMembers),
-// }))
-
 export const rooms = pgTable('rooms', {
   id: text('id')
     .primaryKey()
@@ -72,19 +64,21 @@ export const roomMembers = pgTable('room_members', {
     .defaultNow(),
 })
 
-// // Relacionamento de membros da sala
-// export const roomRelations = relations(rooms, ({ many }) => ({
-//   members: many(roomMembers),
-// }))
-
-// // Relacionamento de membros em relação ao usuário e à sala
-// export const roomMembersRelations = relations(roomMembers, ({ one }) => ({
-//   user: one(user, {
-//     fields: [roomMembers.userId],
-//     references: [user.id],
-//   }),
-//   room: one(rooms, {
-//     fields: [roomMembers.roomId],
-//     references: [rooms.id],
-//   }),
-// }))
+export const messages = pgTable('messages', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  roomId: text('room_id')
+    .notNull()
+    .references(() => rooms.id),
+  ownerId: text('owner_id')
+    .notNull()
+    .references(() => user.id),
+  message: text('message').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})

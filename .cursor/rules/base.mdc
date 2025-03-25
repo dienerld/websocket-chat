@@ -1,0 +1,125 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Regras para Geração de Código com LLMs
+
+o projeto é construido usando fastify usando autoload das rotas, zod para validação de dados de entrada e saída, drizzle com postgres para armazenamento dos dados e websocket para comunicação em tempo real.
+
+## Documentações
+ - https://orm.drizzle.team/docs/overview
+ - https://fastify.dev/docs/latest/
+ - https://socket.io/docs/v4/
+
+## Estrutura e Organização
+- Cada módulo deve seguir a estrutura:
+  ```
+  src/
+    ├── @types/
+    │     └── [types].d.ts # Arquivo de definição de tipagens para bibliotecas
+    ├── db/
+    │    ├── schemas/
+    │    │      └── [schema].ts # Arquivo de definição de entidade do banco de dados
+    │    └── index.ts # Arquivo de inicialização do cliente db e unificação dos scheams
+    ├── http/
+    │    ├── middleware/
+    │    │      └── [middleware].ts # Middleware para uso global na aplicação
+    │    └── routes/
+    │           └── root.ts # Arquivo de rota root da aplicação
+    ├── modules/
+    │     └── [module-name]/
+    │           ├── functions/
+    │           │     └── [resource].ts # Arquivo contendo a função para execução do usecase
+    │           ├── http-routes.ts # Arquivo para gerenciamentos de rotas
+    │           └── index.ts # Arquivo para fazer autoload das rotas
+    ├── app.ts # Configuração do fastify
+    └── index.ts # Bootstrap da aplicação
+  ```
+
+- O projeto é separado em módulos onde cada módulo vai representar uma funcionalidade da aplicação. Pode acontecer de uma funcionalidade depender de outra então pode ser importado um módulo dentro de outro, mas deve ser feito de forma a evitar muito acoplamento entre módulos. Serviços que serão compartilhados por muitos módulos devem estar localizados no composables global que pode ser importado por todos os módulos facilmente. Esta regra vale para componentes também.
+- Utilize o Biome para manter a consistência do código
+
+## Padrões de Código
+
+### TypeScript
+- Evite o uso de `any`
+- Defina interfaces para todas as props de componentes
+- Use tipos explícitos para retornos de funções
+- Prefira `type` sobre `interface` para definições simples
+
+
+## Boas Práticas
+
+- Evite duplicação de código
+- Mantenha funções pequenas e focadas
+- Use early returns para reduzir complexidade
+- Documente funções complexas com JSDoc
+- Siga o princípio DRY (Don't Repeat Yourself)
+- Evite o uso de 'any' em TypeScript
+- Prefira programação funcional quando possível
+- Mantenha as funções pequenas e focadas em uma única responsabilidade
+- Use comentários para explicar lógica complexa
+
+## Exemplos de Uso
+
+```ts
+// http-routes.ts
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+
+import { verifyAuth } from '~/http/middleware/verify-auth'
+import { generateResponseSchemaHandler } from '~/utils/generate-schema-handler'
+import { getMe, userResponseSchema } from './functions/get-user'
+
+export const routes: FastifyPluginAsyncZod = async app => {
+  app.get(
+    '/me',
+    {
+      onRequest: [verifyAuth],
+      schema: {
+        ...generateResponseSchemaHandler({
+          tags: ['User'],
+          operationId: 'getUser',
+          summary: 'Get By Access Token',
+          description: 'Get a user',
+          codeResponseSuccess: 200,
+          schemaResponseSuccess: userResponseSchema,
+        }),
+      },
+    },
+    async (request, reply) => {
+      const response = await getMe(request.session.user_id)
+
+      return reply.status(200).send(response)
+    }
+  )
+}
+```
+
+```ts
+import z from 'zod'
+import { db, eq, tables } from '~/db'
+
+export const userResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  username: z.string(),
+})
+
+export type UserResponse = z.infer<typeof userResponseSchema>
+
+export async function getMe(id: string): Promise<UserResponse> {
+  const [userDb] = await db
+    .select({
+      id: tables.user.id,
+      name: tables.user.name,
+      username: tables.user.username,
+    })
+    .from(tables.user)
+    .where(eq(tables.user.id, id))
+    .execute()
+
+  return userResponseSchema.parse(userDb)
+}
+```

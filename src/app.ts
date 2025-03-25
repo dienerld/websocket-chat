@@ -1,7 +1,10 @@
-import { join } from 'node:path'
 import { version } from '@@/package.json'
+
+import { join } from 'node:path'
 import fastifyAutoload, { type AutoloadPluginOptions } from '@fastify/autoload'
+import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
+import fastifySession from '@fastify/session'
 import fastifySwagger from '@fastify/swagger'
 import fastify, { type FastifyServerOptions } from 'fastify'
 import {
@@ -27,6 +30,8 @@ export const fastifyInstance = fastify()
   .setSerializerCompiler(serializerCompiler)
   .withTypeProvider<ZodTypeProvider>()
   .register(fastifyCors, { origin: env.CORS })
+  .register(fastifyCookie)
+  .register(fastifySession, { secret: env.SESSION_SECRET })
   .register(fastifySwagger, {
     openapi: {
       info: {

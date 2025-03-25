@@ -12,9 +12,6 @@ export const signinSchema = z.object({
 export type SigninRequestBody = z.infer<typeof signinSchema>
 
 export const responseSigninSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  username: z.string(),
   session: z.string(),
 })
 
@@ -41,11 +38,8 @@ export async function signin(body: SigninRequestBody): Promise<SigninResponse> {
     throw new AppError('Username or password is incorrect', 401)
   }
 
-  const session = createJsonWebToken({ userId: user.id })
+  const session = createJsonWebToken({ id: user.id })
   return {
-    id: user.id,
-    name: user.name,
-    username: user.username,
     session,
   }
 }
