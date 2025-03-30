@@ -1,8 +1,8 @@
 export class AppError extends Error {
   code: number
-  constructor(message: string, code?: number) {
+  constructor(message: string, code?: number, name?: string) {
     super(message)
-    this.name = AppError.STATUS_CODES[code || 400]
+    this.name = name || AppError.STATUS_CODES[code || 400]
     this.code = code || 400
   }
 

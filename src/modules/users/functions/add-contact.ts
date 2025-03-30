@@ -30,10 +30,10 @@ export async function addContact(
     .execute()
 
   if (!friendUser) {
-    throw new AppError('Usuário não encontrado', 404)
+    throw new AppError('Usuário não encontrado', 404, 'Usuário não encontrado')
   }
 
-  // Verifica se já existe amizade em qualquer direção (user1 -> user2 ou user2 -> user1)
+  // Verifica se já existe amizade em qualquer direção
   const [existingFriendship] = await db
     .select({
       id: tables.friend.id,
@@ -55,54 +55,65 @@ export async function addContact(
     .execute()
 
   if (existingFriendship) {
-    throw new AppError('Contato já adicionado.', 400)
+    throw new AppError('Contato já adicionado.', 400, 'Contato já adicionado')
   }
 
-  // Cria uma nova sala para a conversa
-  const [room] = await db
-    .insert(tables.rooms)
-    .values({
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning({
-      id: tables.rooms.id,
-    })
-    .execute()
-
-  // Adiciona os dois usuários como membros da sala
-  await db
-    .insert(tables.roomMembers)
-    .values([
-      {
-        roomId: room.id,
-        userId: userId,
+  const friendship = await db.transaction(async tx => {
+    // Cria uma nova sala para a conversa
+    const [room] = await tx
+      .insert(tables.rooms)
+      .values({
         createdAt: new Date(),
         updatedAt: new Date(),
-      },
-      {
-        roomId: room.id,
-        userId: friendUser.id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ])
-    .execute()
+      })
+      .returning({
+        id: tables.rooms.id,
+      })
+      .execute()
 
-  // Cria a amizade
-  const [friendship] = await db
-    .insert(tables.friend)
-    .values({
-      userId: userId,
-      friendId: friendUser.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning({
-      id: tables.friend.id,
-      friendId: tables.friend.friendId,
-    })
-    .execute()
+    // Adiciona os dois usuários como membros da sala
+    await tx
+      .insert(tables.roomMembers)
+      .values([
+        {
+          roomId: room.id,
+          userId: userId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          roomId: room.id,
+          userId: friendUser.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ])
+      .execute()
 
+    // Cria as amizades recíprocas
+    const [friendship] = await tx
+      .insert(tables.friend)
+      .values([
+        {
+          userId: userId,
+          friendId: friendUser.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          userId: friendUser.id,
+          friendId: userId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ])
+      .returning({
+        id: tables.friend.id,
+        friendId: tables.friend.friendId,
+      })
+      .execute()
+
+    return friendship
+  })
   return responseAddContactSchema.parse(friendship)
 }

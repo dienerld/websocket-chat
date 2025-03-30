@@ -9,7 +9,7 @@ export const userResponseSchema = z.object({
 
 export type UserResponse = z.infer<typeof userResponseSchema>
 
-export async function getMe(id: string): Promise<UserResponse> {
+export async function getUserById(id: string): Promise<UserResponse> {
   const [userDb] = await db
     .select({
       id: tables.user.id,

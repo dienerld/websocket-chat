@@ -24,27 +24,27 @@ export function createSocket(
   })
 
   io.use((socket, next) => {
-    if (socket.handshake.auth.token) {
-      const session = verify(
-        socket.handshake.auth.token.replace('Bearer ', ''),
-        env.JWT_SECRET
-      ) as {
-        id: string
+    try {
+      if (socket.handshake.auth.token) {
+        const session = verify(
+          socket.handshake.auth.token.replace('Bearer ', ''),
+          env.JWT_SECRET
+        ) as {
+          id: string
+        }
+        if (session) {
+          socket.userId = session.id
+        }
+        next()
+      } else {
+        next(new Error('Authentication error'))
       }
-      if (session) {
-        socket.userId = session.id
-      }
-      next()
-    } else {
+    } catch (error) {
       next(new Error('Authentication error'))
     }
   })
 
   io.on('connection', async socket => {
-    socket.on('disconnect', () => {
-      console.log('user disconnected')
-    })
-
     for (const listener of listeners) {
       listener.func(socket)
     }

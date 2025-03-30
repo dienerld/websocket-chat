@@ -13,7 +13,7 @@ import {
   responseUserExistsSchema,
 } from './functions/check-if-exists'
 import { getContacts, responseContactsSchema } from './functions/get-contacts'
-import { getMe, userResponseSchema } from './functions/get-user'
+import { getUserById, userResponseSchema } from './functions/get-user'
 
 export const routes: FastifyPluginAsyncZod = async app => {
   app.get(
@@ -32,7 +32,7 @@ export const routes: FastifyPluginAsyncZod = async app => {
       },
     },
     async (request, reply) => {
-      const response = await getMe(request.session.user_id)
+      const response = await getUserById(request.session.user_id)
 
       return reply.status(200).send(response)
     }
@@ -78,6 +78,29 @@ export const routes: FastifyPluginAsyncZod = async app => {
     },
     async (request, reply) => {
       const response = await checkIfUserExists(request.params.username)
+
+      return reply.status(200).send(response)
+    }
+  )
+
+  app.get(
+    '/:id',
+    {
+      onRequest: [verifyAuth],
+      schema: {
+        params: z.object({ id: z.string() }),
+        ...generateResponseSchemaHandler({
+          tags: ['User'],
+          operationId: 'getUserById',
+          summary: 'Get User By Id',
+          description: 'Get user by id',
+          codeResponseSuccess: 200,
+          schemaResponseSuccess: userResponseSchema,
+        }),
+      },
+    },
+    async (request, reply) => {
+      const response = await getUserById(request.params.id)
 
       return reply.status(200).send(response)
     }

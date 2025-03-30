@@ -18,7 +18,5 @@ export async function checkIfUserExists(
     .where(eq(tables.user.username, username))
     .limit(1)
 
-  console.log(userExist)
-
   return responseUserExistsSchema.parse({ exists: !!userExist })
 }
