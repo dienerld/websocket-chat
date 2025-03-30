@@ -10,7 +10,9 @@
     "local:start:production": "node --env-file .env.production dist/index.js",
     "local:start:development": "node --env-file .env.local dist/index.js",
     "drizzle": "node --env-file .env.local node_modules/drizzle-kit/bin.cjs",
+    "drizzle:production": "node --env-file .env.production node_modules/drizzle-kit/bin.cjs",
     "db:push": "pnpm run drizzle push",
+    "db:push:production": "pnpm run drizzle:production push",
     "db:studio": "pnpm run drizzle studio",
     "db:generate": "pnpm run drizzle generate",
     "db:generate:push": "pnpm run drizzle generate && pnpm run drizzle push"
