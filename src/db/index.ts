@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
+import { type Config, createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
 import { env } from '../env'
 
 export {
@@ -16,5 +16,15 @@ export {
 import * as tables from './schemas'
 
 export { tables }
-export const client = postgres(env.DATABASE_URL)
+
+const cfg: Config = {
+  url: env.DATABASE_URL,
+}
+
+if (env.NODE_ENV === 'production') {
+  cfg.authToken = env.TURSO_AUTH_TOKEN
+}
+
+const client = createClient(cfg)
+
 export const db = drizzle(client, { schema: tables, logger: false })

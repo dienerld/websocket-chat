@@ -1,22 +1,22 @@
 import { createId } from '@paralleldrive/cuid2'
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-export const user = pgTable('users', {
+export const user = sqliteTable('users', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
   name: text('name').notNull(),
   username: text('username').notNull(),
   password: text('password').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
+  createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
+    .$defaultFn(() => new Date()),
 })
 
-export const friend = pgTable('friends', {
+export const friend = sqliteTable('friends', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -26,27 +26,27 @@ export const friend = pgTable('friends', {
   friendId: text('friend_id')
     .notNull()
     .references(() => user.id),
-  createdAt: timestamp('created_at', { withTimezone: true })
+  createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
+    .$defaultFn(() => new Date()),
 })
 
-export const rooms = pgTable('rooms', {
+export const rooms = sqliteTable('rooms', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
-  createdAt: timestamp('created_at', { withTimezone: true })
+  createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
+    .$defaultFn(() => new Date()),
 })
 
-export const roomMembers = pgTable('room_members', {
+export const roomMembers = sqliteTable('room_members', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -56,15 +56,15 @@ export const roomMembers = pgTable('room_members', {
   userId: text('user_id')
     .notNull()
     .references(() => user.id),
-  createdAt: timestamp('created_at', { withTimezone: true })
+  createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
+    .$defaultFn(() => new Date()),
 })
 
-export const messages = pgTable('messages', {
+export const messages = sqliteTable('messages', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -75,10 +75,10 @@ export const messages = pgTable('messages', {
     .notNull()
     .references(() => user.id),
   message: text('message').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
+  createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .defaultNow(),
+    .$defaultFn(() => new Date()),
 })

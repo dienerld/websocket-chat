@@ -1,6 +1,6 @@
-import { db, tables } from '@@/src/db'
-import { eq } from 'drizzle-orm'
+import { eq, not } from 'drizzle-orm'
 import z from 'zod'
+import { db, tables } from '~/db'
 
 export const responseContactsSchema = z.array(
   z.object({
@@ -12,22 +12,56 @@ export const responseContactsSchema = z.array(
 )
 
 export type ContactsResponse = z.infer<typeof responseContactsSchema>
-export async function getContacts(id: string): Promise<ContactsResponse> {
-  const contacts = await db
-    .selectDistinctOn([tables.user.id], {
-      id: tables.user.id,
+// export async function getContacts(userId: string): Promise<ContactsResponse> {
+//   const myRooms = await db
+//     .select({ roomId: tables.roomMembers.roomId })
+//     .from(tables.roomMembers)
+//     .where(eq(tables.roomMembers.userId, userId))
+
+//   const membersByRoom = await db
+//     .select({
+//       id: tables.roomMembers.userId,
+//       name: tables.user.name,
+//       username: tables.user.username,
+//       roomId: tables.roomMembers.roomId,
+//     })
+//     .from(tables.roomMembers)
+//     .leftJoin(tables.user, eq(tables.roomMembers.userId, tables.user.id))
+//     .where(
+//       and(
+//         inArray(
+//           tables.roomMembers.roomId,
+//           myRooms.map(room => room.roomId)
+//         ),
+//         not(eq(tables.roomMembers.userId, userId))
+//       )
+//     )
+
+//   return responseContactsSchema.parse(membersByRoom)
+// }
+
+export async function getContacts(userId: string): Promise<ContactsResponse> {
+  const cteGetRooms = db
+    .$with('get_rooms')
+    .as(
+      db
+        .select({ roomId: tables.roomMembers.roomId })
+        .from(tables.roomMembers)
+        .where(eq(tables.roomMembers.userId, userId))
+    )
+
+  const contactsWithRoom = await db
+    .with(cteGetRooms)
+    .select({
+      id: tables.roomMembers.userId,
       name: tables.user.name,
       username: tables.user.username,
       roomId: tables.roomMembers.roomId,
     })
-    .from(tables.friend)
-    .where(eq(tables.friend.userId, id))
-    .innerJoin(tables.user, eq(tables.friend.friendId, tables.user.id))
-    .innerJoin(
-      tables.roomMembers,
-      eq(tables.friend.friendId, tables.roomMembers.userId)
-    )
-    .execute()
+    .from(tables.roomMembers)
+    .leftJoin(tables.user, eq(tables.roomMembers.userId, tables.user.id))
+    .innerJoin(cteGetRooms, eq(tables.roomMembers.roomId, cteGetRooms.roomId))
+    .where(not(eq(tables.roomMembers.userId, userId)))
 
-  return responseContactsSchema.parse(contacts)
+  return responseContactsSchema.parse(contactsWithRoom)
 }

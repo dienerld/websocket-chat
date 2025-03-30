@@ -20,5 +20,7 @@ export async function getUserById(id: string): Promise<UserResponse> {
     .where(eq(tables.user.id, id))
     .execute()
 
+  console.log('userDb', userDb)
+
   return userResponseSchema.parse(userDb)
 }

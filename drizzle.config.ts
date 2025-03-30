@@ -1,11 +1,18 @@
 import { defineConfig } from 'drizzle-kit'
-import { env } from './src/env'
+
+const credentials =
+  process.env.NODE_ENV === 'production'
+    ? {
+        url: process.env.DATABASE_URL as string,
+        authToken: process.env.TURSO_AUTH_TOKEN as string,
+      }
+    : {
+        url: process.env.DATABASE_URL as string,
+      }
 
 export default defineConfig({
   schema: './src/db/schemas',
   out: './src/db/_migrations',
-  dialect: 'postgresql',
-  dbCredentials: {
-    url: env.DATABASE_URL,
-  },
+  dialect: 'turso',
+  dbCredentials: credentials,
 })
