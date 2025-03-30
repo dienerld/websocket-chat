@@ -16,8 +16,8 @@ function resolveEnvVars(config: NodeJS.ProcessEnv) {
 
 const envSchema = z
   .object({
-    HOST: z.string(),
-    PORT: z.coerce.number().int().min(0).max(65535),
+    HOST: z.string().default('0.0.0.0'),
+    PORT: z.coerce.number().int().min(0).max(65535).default(8080),
     DATABASE_URL: z.string().url(),
     CORS: z
       .string()
