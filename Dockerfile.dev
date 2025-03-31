@@ -1,4 +1,4 @@
-FROM node:20-slim as builder
+FROM node:20-slim
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -20,26 +20,10 @@ USER node
 
 WORKDIR /home/node/app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm build
-
-FROM node:20-slim as production
-
-RUN corepack enable
-
-WORKDIR /home/node/app
-
-ENV NODE_ENV=production
-
-COPY --from=builder /home/node/app/dist ./dist
-COPY --from=builder /home/node/app/package.json ./package.json
-COPY --from=builder /home/node/app/pnpm-lock.yaml ./pnpm-lock.yaml
-
-RUN pnpm install --only=production
-
-CMD ["pnpm", "start"]
+CMD ["tail", "-f", "/dev/null"]

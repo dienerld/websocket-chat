@@ -2,13 +2,14 @@
   "name": "fastify-websocket",
   "version": "0.0.1",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file .env.local src/index.ts",
     "seed": "tsx --env-file .env.local src/db/seed.ts",
     "build": "tsc --noEmit && tsup",
-    "start": "node dist/index.js",
-    "local:start:production": "node --env-file .env.production dist/index.js",
-    "local:start:development": "node --env-file .env.local dist/index.js",
+    "start": "node dist/index.cjs",
+    "local:start:production": "node --env-file .env.production dist/index.cjs",
+    "local:start:development": "node --env-file .env.local dist/index.cjs",
     "drizzle": "node --env-file .env.local node_modules/drizzle-kit/bin.cjs",
     "drizzle:production": "node --env-file .env.production node_modules/drizzle-kit/bin.cjs",
     "db:push": "pnpm run drizzle push",
@@ -17,9 +18,8 @@
     "db:generate": "pnpm run drizzle generate",
     "db:generate:push": "pnpm run drizzle generate && pnpm run drizzle push"
   },
-
   "keywords": [],
-  "author": "Diener Dornelas<diener@diener.dev>",
+  "author": "Diener Dornelas<diener@dienerld.dev>",
   "license": "ISC",
   "description": "",
   "dependencies": {
